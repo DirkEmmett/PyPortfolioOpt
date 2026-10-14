@@ -250,24 +250,17 @@ class DiscreteAllocation:
             ticker, weight = self.weights[idx]
             price = self.latest_prices[ticker]
 
-            # If we can't afford this asset, search for the next highest deficit that we
-            # can purchase.
-            counter = 0
             while price > available_funds:
-                deficit[idx] = 0  # we can no longer purchase the asset at idx
-                idx = np.argmax(deficit)  # find the next most deviant asset
+                deficit[idx] = 0
+                idx = np.argmax(deficit)
 
-                # If either of these conditions is met, we break out of both while loops
-                # hence the repeated statement below
-                if deficit[idx] < 0 or counter == 10:
+                if deficit[idx] <= 0:
                     break
 
                 ticker, weight = self.weights[idx]
                 price = self.latest_prices[ticker]
-                counter += 1
 
-            if deficit[idx] <= 0 or counter == 10:  # pragma: no cover
-                # Dirty solution to break out of both loops
+            if deficit[idx] <= 0:
                 break
 
             # Buy one share at a time

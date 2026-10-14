@@ -59,6 +59,34 @@ def test_greedy_portfolio_allocation():
     assert leftover_verbose == leftover
 
 
+@pytest.mark.parametrize(
+    "d_price, expected_allocation, expected_leftover",
+    [
+        (20, {"B": 37, "C": 37, "D": 1}, 6),
+        (30, {"B": 37, "C": 37}, 26),
+    ],
+)
+def test_greedy_portfolio_scans_unaffordable_deficits(
+    d_price, expected_allocation, expected_leftover
+):
+    weights = {"B": 0.375, "C": 0.375}
+    weights.update({f"EXPENSIVE_{i}": 0.02 for i in range(12)})
+    weights["D"] = 0.01
+    prices = {"B": 1, "C": 1}
+    prices.update({f"EXPENSIVE_{i}": 100 for i in range(12)})
+    prices["D"] = d_price
+    latest_prices = pd.Series(prices, dtype=float)
+
+    allocation, leftover = DiscreteAllocation(
+        weights, latest_prices, total_portfolio_value=100
+    ).greedy_portfolio()
+
+    assert allocation == expected_allocation
+    assert leftover == expected_leftover
+    total = sum(num * latest_prices[ticker] for ticker, num in allocation.items())
+    assert total + leftover == 100
+
+
 def test_greedy_allocation_rmse_error():
     ef = setup_efficient_frontier()
     w = ef.max_sharpe(risk_free_rate=0.02)
